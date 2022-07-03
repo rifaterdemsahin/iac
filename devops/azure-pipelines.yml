@@ -1,0 +1,23 @@
+# trigger:
+# - master
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - name: System.Debug
+    value: true
+
+steps:
+- checkout: self
+  persistCredentials: true
+
+- script: |
+   git config --global user.email info@pexabo.com & git config --global user.name "Erdem"
+  workingDirectory: $(System.DefaultWorkingDirectory)
+
+- script: |
+   git fetch
+   git pull
+   git checkout -b config$(Build.BuildNumber)
+   git push --set-upstream origin config$(Build.BuildNumber)

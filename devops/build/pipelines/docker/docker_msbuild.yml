@@ -1,0 +1,20 @@
+trigger: none
+
+pool:
+  vmImage: 'ubuntu-20.04'
+
+variables:
+  imageName: 'pipelines-devops-docker-msbuild'
+  DOCKER_BUILDKIT: 1
+  dockerRegistryServiceConnection: devopspexabo.azurecr.io
+
+steps:
+  - checkout: self
+  - task: Docker@2
+    displayName: Build and Push image
+    inputs:
+      repository: $(imageName)
+      command: buildAndPush
+      containerRegistry: $(dockerRegistryServiceConnection)
+      Dockerfile: $(System.DefaultWorkingDirectory)/build/pipelines/docker/dockerfile_msbuild
+      tags: latest

@@ -1,0 +1,123 @@
+parameters:
+  - name: environment
+    values:
+      - DevOpsDev
+      - DevOpsTst
+      - DevOpsPrd
+  - name: firstTimeRun
+    type: boolean
+  - name: resourceGroupName
+  - name: version
+  - name: azureResourceManagerConnection  # Cannot be a variable (https://docs.microsoft.com/en-us/azure/devops/pipelines/library/service-endpoints?view=azure-devops&tabs=yaml#use-a-service-connection)
+stages:
+  - template: environment.template.yml
+    parameters:
+      environment: ${{ parameters.environment }}
+      version: ${{ parameters.version }}
+      setReleaseName: false
+      variables:
+        - template: ../variables/infrastructure.variables.yml@self
+        - template: ../variables/containerregistry.variables.yml@self
+      jobs:
+        # - job: ContainerRegistry
+        #   displayName: ContainerRegistry
+        #   continueOnError: true
+        #   steps:
+        #     - checkout: self
+        #     - task: AzureResourceGroupDeployment@2
+        #       displayName: 'ContainerRegistry'
+        #       continueOnError: ${{ parameters.firstTimeRun }}
+        #       inputs:
+        #         azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+        #         resourceGroupName: $(azure.resourceGroup)
+        #         location: '$(azure.location)'
+        #         csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/containerregistry_v1/containerRegistry.azrm.json'
+        #         csmParametersFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/containerregistry_v1/parameters/devops-shared.azrm.parameters.json'
+        #         overrideParameters: '-registryName "devopsregistrysharedv11"'
+        # - job: VirtualMachine
+        #   displayName: VirtualMachine
+        #   continueOnError: true
+        #   variables:
+        #   - group: virtualmachine      
+        #   steps:
+        #     - checkout: self
+        #     - task: AzureResourceGroupDeployment@2
+        #       displayName: 'VirtualMachine'
+        #       continueOnError: ${{ parameters.firstTimeRun }}
+        #       inputs:
+        #         azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+        #         resourceGroupName: $(azure.resourceGroup)
+        #         location: '$(azure.location)'
+        #         csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/virtualmachine_v1/virtualmachine.template.json'
+        #         csmParametersFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/virtualmachine_v1/virtualmachine.parameters.json'
+        #         overrideParameters: '-vmName "devopsrunner" -adminPassword "$(testvmpassword)" -adminUsername "$(testvmuser)"'
+        # - job: DataBricks
+        #   displayName: DataBricks
+        #   continueOnError: true
+        #   # variables:
+        #   # - group: databricks    
+        #   steps:
+        #     - checkout: self
+        #     - task: AzureResourceGroupDeployment@2
+        #       displayName: 'DataBricks'
+        #       continueOnError: ${{ parameters.firstTimeRun }}
+        #       inputs:
+        #         azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+        #         resourceGroupName: $(azure.resourceGroup)
+        #         location: '$(azure.location)'
+        #         csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/databricks_v1/databricks.template.json'
+        #         csmParametersFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/databricks_v1/databricks.parameters.json'
+        #         # overrideParameters: '-vmName "devopsrunner" -adminPassword "$(testvmpassword)" -adminUsername "$(testvmuser)"'
+        # - job: DataBricksAllInOneBicep
+        #   displayName: databricksallinonebicep
+        #   continueOnError: true
+        #   # variables:
+        #   # - group: databricks    
+        #   steps:
+        #     - task: AzureCLI@2
+        #       inputs:
+        #         azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+        #         scriptType: pscore
+        #         scriptLocation: inlineScript
+        #         inlineScript: |
+        #           az deployment group create --resource-group $(azure.resourceGroup) --template-file '$(System.DefaultWorkingDirectory)/build/armtemplates/databricks_v1/databricks.bicep' --parameters '{ \"workspaceName\": { \"value\": \"testerdatabricks\" } }'
+        - job: alerts
+          displayName: alerts
+          continueOnError: true
+          # variables:
+          # - group: databricks    
+          steps:
+#            - task: AzureCLI@2
+#              inputs:
+#                azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+#                scriptType: pscore
+#                scriptLocation: inlineScript
+#                inlineScript: |
+#                  az deployment group create --resource-group $(azure.resourceGroup) --template-file '$(System.DefaultWorkingDirectory)/build/armtemplates/containerinstance_v1/main.bicep'
+            - task: AzureResourceGroupDeployment@2
+              displayName: 'alert budget stage 100'
+              continueOnError: ${{ parameters.firstTimeRun }}
+              inputs:
+                azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+                resourceGroupName: $(azure.resourceGroup)
+                location: '$(azure.location)'
+                csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/alerts_v1/alerts.azrm.json'
+                overrideParameters: '-budgetName "budgetpoint1" -amount "100"'
+            - task: AzureResourceGroupDeployment@2
+              displayName: 'alert budget stage 200'
+              continueOnError: ${{ parameters.firstTimeRun }}
+              inputs:
+                azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+                resourceGroupName: $(azure.resourceGroup)
+                location: '$(azure.location)'
+                csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/alerts_v1/alerts.azrm.json'
+                overrideParameters: '-budgetName "budgetpoint1" -amount "200"'
+            - task: AzureResourceGroupDeployment@2
+              displayName: 'alert budget stage 300'
+              continueOnError: ${{ parameters.firstTimeRun }}
+              inputs:
+                azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+                resourceGroupName: $(azure.resourceGroup)
+                location: '$(azure.location)'
+                csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/alerts_v1/alerts.azrm.json'
+                overrideParameters: '-budgetName "budgetpoint3" -amount "300"'

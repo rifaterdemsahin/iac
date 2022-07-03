@@ -1,0 +1,90 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "registryName": {
+            "type": "String"
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "The location where the storage account should be alocated"
+            }
+        },
+        "description": {
+            "type": "string",
+            "metadata": {
+                "description": "A general description of the resource"
+            }
+        },
+        "applicationName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the application this resource belongs to"
+            }
+        },
+        "releaseName": {
+            "defaultValue": "latest",
+            "type": "string",
+            "metadata": {
+                "description": "The name of the release that has lastly modified the resource"
+            }
+        },
+        "branchName": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "The name of the branch that the application artefact originated from"
+            }
+        },
+        "releaseDate": {
+            "type": "string",
+            "defaultValue": "[utcNow()]",
+            "metadata": {
+                "description": "The timestamp at which the release happened"
+            }
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ContainerRegistry/registries",
+            "apiVersion": "2019-12-01-preview",
+            "name": "[parameters('registryName')]",
+            "location": "[parameters('location')]",
+            "tags": {
+                "Application": "[parameters('applicationName')]",
+                "Description": "[parameters('description')]",
+                "Release": "[parameters('releaseName')]",
+                "BranchName": "[parameters('branchName')]",
+                "ReleaseDate": "[parameters('releaseDate')]"
+            },
+            "sku": {
+                "name": "Standard",
+                "tier": "Standard"
+            },
+            "properties": {
+                "adminUserEnabled": true,
+                "policies": {
+                    "quarantinePolicy": {
+                        "status": "disabled"
+                    },
+                    "trustPolicy": {
+                        "type": "Notary",
+                        "status": "disabled"
+                    },
+                    "retentionPolicy": {
+                        "days": 7,
+                        "status": "disabled"
+                    }
+                },
+                "encryption": {
+                    "status": "disabled"
+                },
+                "dataEndpointEnabled": false
+            }
+        }
+    ]
+}

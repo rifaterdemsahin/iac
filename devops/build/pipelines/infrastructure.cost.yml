@@ -1,0 +1,22 @@
+name: DevOpsInfraCosts
+trigger: none
+
+variables:
+  - name: System.Debug
+    value: true
+
+parameters:
+    - name: InitialCreation
+      displayName: Deploying for the first time
+      type: boolean
+
+stages:
+  - template: templates/infrastructure.environment.template.yml  # Generic reference and all templates in the same folder and all templates end the same way
+    parameters:
+      environment: cwdev
+      storages: ${{ parameters.storages }}
+      appserviceplans: ${{ parameters.appserviceplans }}
+      appinsights: ${{ parameters.appinsights }}
+      resourceGroupName: 'CW-AMR-FUSION-RG-DEMO'
+      version: $(Build.BuildNumber)
+      firstTimeRun: ${{ parameters.firstTimeRun }}

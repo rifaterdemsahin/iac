@@ -1,0 +1,28 @@
+name: BackupApimGitDaily
+trigger: none
+pool:
+  vmImage: 'ubuntu-20.04'
+
+stages:
+  - stage: TriggerBackup
+    displayName: ApimBackup
+    jobs:
+      - job: 
+        displayName: "Trigger Backup"
+        steps:
+          - bash: echo "Started Backup"
+            displayName: Start
+          - task: AzureCLI@2
+            displayName: Az backup Function Trigger
+            inputs:
+              azureSubscription: 'Pay-As-You-Go(15704bda-bb65-45ef-bd84-55b56bb32733)'
+              scriptType: 'pscore'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                $filename="myBackupBeforeRevisioning"+$(get-date -f yyyy-mm-dd-hh:mm)+".zip"
+                az apim backup --name apimbackuptesting -g thetasandbox --backup-name $filename --storage-account-name apimstorageaccountbackup --storage-account-container backup --storage-account-key 1Zc9EVJQHfBBAb3qlcTnRDzTeWW1fy0ivVC0ieaV0RzZuhINTtxkcB/4Y5iHi96Gzt4lJzbStcZznySuRCxVpw==
+          - bash: echo "Ended Backup"
+            displayName: End
+# https://docs.azure.cn/zh-cn/cli/apim?view=azure-cli-latest#az_apim_backup
+# todo
+# remove the account key to the azure variables

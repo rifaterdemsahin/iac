@@ -1,0 +1,20 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourcegroup": {
+            "value": "DevOps"
+        },"workflows_buildnightly_name": {
+            "value": "buildnightly"
+        },
+        "workflows_buildnightly_parameters_environment": {
+            "value": "dev"
+        },
+        "channelid": {
+                "value": "19:149864b1e1644764b2bfb3d14e360379@thread.tacv2"
+        },
+        "groupId": {
+                "value": "389e07b5-8a5d-40c4-970d-bc76dbe36464"
+        }
+    }
+}

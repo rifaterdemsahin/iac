@@ -1,0 +1,15 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "X1X"
+		},
+		"LS_ADLS1_mulesoft_archive_properties_typeProperties_dataLakeStoreUri": {
+			"value": "X2X"
+		},
+		"LS_ADLS1_mulesoft_archive_properties_typeProperties_servicePrincipalId": {
+			"value": "X3X"
+		}
+	}
+}

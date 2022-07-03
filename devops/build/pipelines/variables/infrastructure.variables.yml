@@ -1,0 +1,2 @@
+variables:
+  - group: virtualmachine # loads the variable group from Azure Devops

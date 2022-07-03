@@ -1,0 +1,1 @@
+Collecting all the variables in one folder

@@ -1,0 +1,58 @@
+parameters:
+  - name: environment
+    values:
+      - DevOpsDev
+      - DevOpsTst
+      - DevOpsPrd
+  - name: firstTimeRun
+    type: boolean
+  - name: resourceGroupName
+  - name: version
+  - name: azureResourceManagerConnection  # Cannot be a variable (https://docs.microsoft.com/en-us/azure/devops/pipelines/library/service-endpoints?view=azure-devops&tabs=yaml#use-a-service-connection)
+stages:
+  - template: environment.template.yml
+    parameters:
+      environment: ${{ parameters.environment }}
+      version: ${{ parameters.version }}
+      setReleaseName: false
+      variables:
+        - template: ../variables/infrastructure.variables.yml@self
+        - template: ../variables/containerregistry.variables.yml@self
+      jobs:
+        - job: ContainerRegistry
+          displayName: ContainerRegistry
+          continueOnError: true
+          steps:
+            - checkout: self
+#            - task: AzureResourceGroupDeployment@2
+#              displayName: 'ContainerRegistry'
+#              continueOnError: ${{ parameters.firstTimeRun }}
+#              inputs:
+#                azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+#                resourceGroupName: $(azure.resourceGroup)
+#                location: '$(azure.location)'
+#                csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/containerregistry_v1/containerRegistry.azrm.json'
+#                csmParametersFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/containerregistry_v1/parameters/devops-shared.azrm.parameters.json'
+#                overrideParameters: '-registryName "devopsregistrysharedv9"' #send them to the workflow
+#            - task: AzureCLI@2
+#              inputs:
+#                azureSubscription: 'Pay-As-You-Go(15704bda-bb65-45ef-bd84-55b56bb32733)'
+#                scriptType: 'pscore'
+#                scriptLocation: 'scriptPath'
+#                scriptPath: '../scripts/triggerlogicapp.ps1'
+#                arguments: >-
+#                  -resourcegroup "azuredevops" 
+#                  -registryName "devopsregistrysharedv9" 
+#                  -logicapp "createregistry"
+#                  -csmFile "/build/armtemplates/containerregistry_v1/containerRegistry.azrm.json"
+#                  -csmParametersFile "/build/armtemplates/containerregistry_v1/parameters/devops-shared.azrm.parameters.json"
+            - task: AzureResourceGroupDeployment@2
+              displayName: 'ContainerRegistry'
+              continueOnError: ${{ parameters.firstTimeRun }}
+              inputs:
+                azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+                resourceGroupName: $(azure.resourceGroup)
+                location: '$(azure.location)'
+                csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/alerts_v1/alerts.azrm.json'
+                overrideParameters: '-registryName "devopsregistrysharedv9"' #send them to the workflow
+

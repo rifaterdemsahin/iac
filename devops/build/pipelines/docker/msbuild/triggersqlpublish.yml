@@ -1,0 +1,20 @@
+name: usesbuildbasedagenttodosqlpublish
+trigger: none
+
+stages:
+  - stage: sqlpublish
+    displayName: sqlpublish
+    jobs:
+      - job: 
+        displayName: "sql publish"
+        pool: msbuild
+        steps:
+          - checkout: self
+          - bash: echo "Running in custom msbuild pool start"
+            displayName: Start
+          - bash: ls;pwd
+            displayName: See location
+          - bash: dotnet msbuild $(Pipeline.Workspace)/s/build/pipelines/workload/msbuild/database1.sqlproj /t:Build /t:Publish /p:SqlPublishProfilePath="$(Pipeline.Workspace)/s/build/pipelines/workload/msbuild/sqlazure.publish.xml"
+            displayName: Sql Publish by msbuild
+          - bash: echo "Running in custom pool end"
+            displayName: End

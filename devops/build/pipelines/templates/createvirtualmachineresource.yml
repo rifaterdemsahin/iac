@@ -1,0 +1,49 @@
+parameters:
+- name: environment
+  default: ''
+- name: resourceGroupName
+  default: ''
+  
+jobs:
+- deployment:
+  environment: ${{ parameters.environment }}
+  displayName: Resource Creation
+  pool: 
+    vmImage: 'ubuntu-latest'
+  strategy: 
+    runOnce:
+      deploy:
+        steps:
+        - task: DownloadBuildArtifacts@1
+          inputs:  
+            buildType: current
+            downloadType: specific
+            artifactName: 'armtemplates'
+            downloadPath: '$(Pipeline.Workspace)'
+        - task: replacetokens@4
+          inputs:
+            rootDirectory: '$(Pipeline.Workspace)/armtemplates/build/armtemplates/virtualmachine_v1'
+            targetFiles: '$(Pipeline.Workspace)/armtemplates/build/armtemplates/virtualmachine_v1/virtualmachine.parameters.json'
+            encoding: 'auto'
+            tokenPattern: 'custom'
+            tokenPrefix: '#'
+            tokenSuffix: '#'
+            writeBOM: true
+            actionOnMissing: 'warn'
+            keepToken: false
+            actionOnNoFiles: 'continue'
+            enableTransforms: false
+            useLegacyPattern: false
+            enableTelemetry: true
+        - task: AzureResourceManagerTemplateDeployment@3
+          inputs:
+            deploymentScope: 'Resource Group'
+            azureResourceManagerConnection: 'Pay-As-You-Go(15704bda-bb65-45ef-bd84-55b56bb32733)'
+            subscriptionId: '15704bda-bb65-45ef-bd84-55b56bb32733'
+            action: 'Create Or Update Resource Group'
+            resourceGroupName: ${{ parameters.resourceGroupName }}
+            location: 'East US'
+            templateLocation: 'Linked artifact'
+            csmFile: '$(Pipeline.Workspace)/armtemplates/build/armtemplates/virtualmachine_v1/virtualmachine.template.json'
+            csmParametersFile: '$(Pipeline.Workspace)/armtemplates/build/armtemplates/virtualmachine_v1/virtualmachine.parameters.json'
+            deploymentMode: 'Incremental'

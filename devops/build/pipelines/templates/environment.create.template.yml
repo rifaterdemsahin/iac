@@ -1,0 +1,14 @@
+parameters:
+  - name: environments
+    type: string
+    values:
+    - devopsdev
+    - devopstst
+    - devopsprd
+stages:
+  - stage: BuildForEnvironments${{ lower(parameters.environments) }}
+    displayName: ${{ lower(parameters.environments) }} Create environments 
+    jobs:
+      - deployment:
+        environment: ${{ lower(parameters.environments) }}
+        displayName: Create/Update Environment

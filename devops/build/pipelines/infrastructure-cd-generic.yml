@@ -1,0 +1,60 @@
+# Generic template 
+name: DevOpsInfraCreationPipeline
+trigger: none
+
+variables:
+  - name: System.Debug
+    value: true
+
+parameters:
+    - name: InitialCreation
+      displayName: Deploying for the first time
+      type: boolean
+      default: false
+    - name: firstTimeRun
+      type: boolean
+      default: true
+
+stages:
+  - stage: BuildForEnvironments
+    displayName: BuildForEnvironments
+    jobs:
+      - deployment:
+        environment: devopsdev
+        displayName: Create/Update Dev Environment
+        pool: 
+          vmImage: 'ubuntu-latest'
+          strategy: 
+            runOnce:
+              deploy:
+                steps:
+                 - bash: echo "Start creating environment"
+                 - bash: echo "End creation of environments"
+      - deployment:
+        environment: devopstst
+        displayName: Create/Update Tst Environment
+      - deployment:
+        environment: devopsprd
+        displayName: Create/Update Prd Environment
+      - job: 
+        displayName: Echo out the process
+        pool: 
+          vmImage: 'ubuntu-latest'
+        steps:
+          - bash: echo "Git Checkout as the starter task embedded and explicit"
+          - bash: echo "Starting the infra creation steps by environments"
+          - bash: echo "Running in Ubuntu Latest"
+  - template: templates/infrastructure.environment.template.yml  # Generic reference and all templates in the same folder and all templates end the same way
+    parameters:
+      environment: DevOpsDev
+      resourceGroupName: 'DevOpsDev'
+      version: $(Build.BuildNumber)
+      firstTimeRun: ${{ parameters.firstTimeRun }}
+      azureResourceManagerConnection: Pay-As-You-Go(15704bda-bb65-45ef-bd84-55b56bb32733)
+  - template: templates/infrastructure.environment.template.yml  # Generic reference and all templates in the same folder and all templates end the same way
+    parameters:
+      environment: DevOpsTst
+      resourceGroupName: 'DevOpsTst'
+      version: $(Build.BuildNumber)
+      firstTimeRun: ${{ parameters.firstTimeRun }}
+      azureResourceManagerConnection: Pay-As-You-Go(15704bda-bb65-45ef-bd84-55b56bb32733)

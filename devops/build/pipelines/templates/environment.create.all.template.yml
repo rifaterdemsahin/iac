@@ -1,0 +1,10 @@
+stages:
+  - template: environment.create.template.yml  # Generic reference and all templates in the same folder and all templates end the same way
+    parameters:
+      environments: 'devopsdev'
+  - template: environment.create.template.yml  # Generic reference and all templates in the same folder and all templates end the same way
+    parameters:
+      environments: 'devopstst'
+  - template: environment.create.template.yml  # Generic reference and all templates in the same folder and all templates end the same way
+    parameters:
+      environments: 'devopsprd'

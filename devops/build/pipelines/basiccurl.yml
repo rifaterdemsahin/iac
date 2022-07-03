@@ -1,0 +1,28 @@
+# Generic template 
+name: DevOpsTriggerWorkflowFromCustomDockerBuildAgent
+trigger: none
+variables:
+  # - name: BuildId
+  #   value: $(Build.BuildNumber)
+  - name: curlurl
+    value: 'https://prod-23.northcentralus.logic.azure.com:443/workflows/1940ddb0fb3a461ca9065e855e780dfc/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=U8PubJwkq-RZIapm0oZe7MsO2oKoSORt1pLHL4Fn_Uw'
+#todo: move the keys to the coldstorage and to the cascading structure
+
+stages:
+  - stage: BuildForEnvironments
+    displayName: BuildForEnvironments
+    jobs:
+      - job: 
+        displayName: "Trigger Curl"
+        # displayName: "Trigger Curl ${{ variables.BuildId }}'"
+        pool: Default
+        steps:
+          - bash: echo "Running in custom pool start"
+            displayName: Start
+          - bash: >
+              curl -v --location --request POST '${{ variables.curlurl }}' --header 'Content-Type: application/json' --data-raw '{}'
+#todo: inline scripts https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/shell-script?view=azure-devops
+#todo: use response code https://stackoverflow.com/questions/38906626/curl-to-return-http-status-code-along-with-the-response
+            displayName: Curl -v with output
+          - bash: echo "Running in custom pool end"
+            displayName: End

@@ -1,0 +1,47 @@
+parameters:
+  - name: environment
+    values:
+      - DevOpsDev
+      - DevOpsTst
+      - DevOpsPrd
+
+  - name: displayName
+    default: ''
+
+  - name: setReleaseName
+    type: boolean
+    default: true
+
+  - name: version
+
+  - name: jobs
+    type: jobList
+
+  - name: useEnvironments
+    type: boolean
+    default: true
+
+  - name: independentStage
+    type: boolean
+    default: false
+
+  - name: variables
+    type: object
+    default: {}
+
+stages:
+  - stage: ${{ lower(parameters.environment) }}
+    displayName: CreateResources ${{ lower(parameters.environment) }}
+    variables:
+    - group: AzureEnvironment.${{ parameters.environment }} #AzureDevOps variables matching, missing part at creation
+
+    jobs:
+      - job: init
+        displayName: Initialize deployment
+        dependsOn: []
+        steps:
+          - download: none
+          - template: ../tasks/set-release-name.v1.yml
+            parameters:
+              version: ${{ parameters.version }}
+      - ${{ parameters.jobs }} #main parameter as the job implicit calling structure

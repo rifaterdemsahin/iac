@@ -1,0 +1,74 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "functions": [],
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "templateHash": "16972826190265087503",
+      "version": "0.4.1.14562"
+    }
+  },
+  "outputs": {
+    "workspace": {
+      "type": "object",
+      "value": "[reference(resourceId('Microsoft.Databricks/workspaces', parameters('workspaceName')))]"
+    }
+  },
+  "parameters": {
+    "disablePublicIp": {
+      "defaultValue": false,
+      "metadata": {
+        "description": "Specifies whether to deploy Azure Databricks workspace with Secure Cluster Connectivity (No Public IP) enabled or not"
+      },
+      "type": "bool"
+    },
+    "location": {
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      },
+      "type": "string"
+    },
+    "pricingTier": {
+      "allowedValues": [
+        "standard",
+        "premium"
+      ],
+      "defaultValue": "premium",
+      "metadata": {
+        "description": "The pricing tier of workspace."
+      },
+      "type": "string"
+    },
+    "workspaceName": {
+      "defaultValue": "test",
+      "metadata": {
+        "description": "The name of the Azure Databricks workspace to create."
+      },
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2018-04-01",
+      "location": "[parameters('location')]",
+      "name": "[parameters('workspaceName')]",
+      "properties": {
+        "managedResourceGroupId": "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('managedResourceGroupName'))]",
+        "parameters": {
+          "enableNoPublicIp": {
+            "value": "[parameters('disablePublicIp')]"
+          }
+        }
+      },
+      "sku": {
+        "name": "[parameters('pricingTier')]"
+      },
+      "type": "Microsoft.Databricks/workspaces"
+    }
+  ],
+  "variables": {
+    "managedResourceGroupName": "[format('databricks-rg-{0}-{1}', parameters('workspaceName'), uniqueString(parameters('workspaceName'), resourceGroup().id))]"
+  }
+}

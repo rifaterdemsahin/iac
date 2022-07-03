@@ -1,0 +1,27 @@
+# Testing Play Ground Serverless 
+name: TestingPlayGroundServerless
+trigger: none
+
+stages:
+  - stage: Main
+    displayName: TestingState
+    jobs:
+      - job:
+        steps:
+        - bash: echo "Started"
+        #https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/deploy/azure-cli?view=azure-devops
+        #https://docs.microsoft.com/en-us/powershell/module/azurerm.logicapp/start-azurermlogicapp?view=azurermps-6.13.0
+        #https://docs.microsoft.com/en-us/cli/azure/logic/workflow?view=azure-cli-latest
+        #https://docs.microsoft.com/en-us/cli/azure/logic?view=azure-cli-latest
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'Pay-As-You-Go(15704bda-bb65-45ef-bd84-55b56bb32733)'
+            scriptType: 'pscore'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az upgrade
+              az --version
+              az extension add --name logic
+              az extension list-available
+              az logicapp start --resource-group DevOps --name cleanupresourcegroups
+        - bash: echo "Ended"

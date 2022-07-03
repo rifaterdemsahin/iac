@@ -1,0 +1,20 @@
+# Sets the name of the current pipeline execution to the given version
+# and adds "(Manual)" to it if the pipeline was triggered manually.
+
+parameters:
+  - name: version
+
+steps:
+  - pwsh: |
+      Write-Host "Set Release Name getting triggered"
+      Write-Host $env:buildReason
+      Write-Host $env:buildName
+      $buildName = $env:buildName
+      if($env:buildReason -eq "Manual") {
+          $buildName = "$buildName ($env:buildReason)"
+      }
+      Write-Host "##vso[build.updatebuildnumber]$buildName"
+    displayName: Update Deployment Name For the Compute
+    env:
+      buildName: ${{ parameters.version }}
+      buildReason: $(Build.Reason)

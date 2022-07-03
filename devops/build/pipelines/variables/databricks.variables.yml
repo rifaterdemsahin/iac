@@ -1,0 +1,3 @@
+variables:
+  - group: databricks # loads the variable group from Azure Devops
+  - name: serviceprincipal # Name of account that pulls the code base

@@ -1,0 +1,239 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+         "resourcegroup": {
+            "defaultValue": "DevOps",
+            "type": "string"
+        },"channelid": {
+            "defaultValue": "-",
+            "type": "string"
+        },
+         "groupId": {
+            "defaultValue": "-",
+            "type": "string"
+        },
+        "workflows_buildnightly_name": {
+            "defaultValue": "buildnightly",
+            "type": "string"
+        },
+        "workflows_buildnightly_parameters_$connections": {
+            "defaultValue": {
+                "teams": {
+                    "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',parameters('resourcegroup'),'/providers/Microsoft.Web/connections/TeamsMain')]",
+                    "connectionName": "TeamsMain",
+                    "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',resourceGroup().location,'/managedApis/teams')]"
+                },
+                "visualstudioteamservices": {
+                    "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',parameters('resourcegroup'),'/providers/Microsoft.Web/connections/VisualstudioTeamServices')]",
+                    "connectionName": "visualstudioteamservices",
+                    "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',resourceGroup().location,'/managedApis/visualstudioteamservices')]"
+                }
+            },
+            "type": "Object"
+        },
+        "workflows_buildnightly_parameters_environment": {
+            "defaultValue": "dev",
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "apiVersion": "2017-07-01",
+            "dependsOn": [],
+            "location": "[resourceGroup().location]",
+            "name": "[parameters('workflows_buildnightly_name')]",
+            "properties": {
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {
+                                "teams": {
+                                    "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',parameters('resourcegroup'),'/providers/Microsoft.Web/connections/teams')]",
+                                    "connectionName": "TeamsMain",
+                                    "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/', resourceGroup().location,'/managedApis/teams')]"
+                                },
+                                "visualstudioteamservices": {
+                                    "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',parameters('resourcegroup'),'/providers/Microsoft.Web/connections/visualstudioteamservices')]",
+                                    "connectionName": "visualstudioteamservices",
+                                    "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/', resourceGroup().location,'/managedApis/visualstudioteamservices')]"
+                                }
+                            },
+                            "type": "Object"
+                        },
+                        "environment": {
+                            "defaultValue": "dev",
+                            "type": "String"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "actions": {
+                        "End_Message": {
+                            "runAfter": {
+                                "For_each": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "body": {
+                                    "messageBody": "<p>Ended nighlty builds. Success Count : &nbsp;Fail Count :</p>",
+                                    "recipient": {
+                                        "channelId": "[parameters('channelId')]",
+                                        "groupId": "[parameters('groupId')]"
+                                    }
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['teams']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/beta/teams/conversation/message/poster/Flow bot/location/@{encodeURIComponent('Channel')}"
+                            }
+                        },
+                        "For_each": {
+                            "foreach": "@body('Parse_JSON_for_builds')",
+                            "actions": {
+                                "Queue_a_new_build": {
+                                    "runAfter": {},
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['visualstudioteamservices']['connectionId']"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "path": "/@{encodeURIComponent('VPS')}/_apis/build/builds",
+                                        "queries": {
+                                            "account": "pexabo",
+                                            "buildDefId": "@items('For_each')['id']"
+                                        }
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Parse_JSON_for_builds": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Foreach"
+                        },
+                        "Initialize_variable_build_definitions": {
+                            "runAfter": {
+                                "Start_Message": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "builds",
+                                        "type": "array",
+                                        "value": [
+                                            {
+                                                "id": "2",
+                                                "name": "dockerpoc"
+                                            },
+                                            {
+                                                "id": "2",
+                                                "name": "dockerpoc"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        "Parse_JSON_for_builds": {
+                            "runAfter": {
+                                "Initialize_variable_build_definitions": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ParseJson",
+                            "inputs": {
+                                "content": "@variables('builds')",
+                                "schema": {
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "name": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "name",
+                                            "id"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "Response": {
+                            "runAfter": {
+                                "End_Message": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "statusCode": 200
+                            }
+                        },
+                        "Start_Message": {
+                            "runAfter": {},
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "body": {
+                                    "messageBody": "<p>Starting nightly builds</p>",
+                                    "recipient": {
+                                        "channelId": "[parameters('channelId')]",
+                                        "groupId": "[parameters('groupId')]"
+                                    }
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['teams']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/beta/teams/conversation/message/poster/@{encodeURIComponent('Flow bot')}/location/@{encodeURIComponent('Channel')}"
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": "[parameters('workflows_buildnightly_parameters_$connections')]"
+                    },
+                    "environment": {
+                        "value": "[parameters('workflows_buildnightly_parameters_environment')]"
+                    }
+                },
+                "state": "Enabled"
+            },
+            "scale": null,
+            "tags": {},
+            "type": "Microsoft.Logic/workflows"
+        }
+    ],
+    "variables": {}
+}
