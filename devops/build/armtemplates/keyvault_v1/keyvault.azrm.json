@@ -1,0 +1,132 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "environmentname": {
+            "type": "string"
+        },
+        "applicationName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the application this resource belongs to."
+            }
+        },
+        "description": {
+            "type": "string",
+            "metadata": {
+                "description": "The purpose of this resource in the context the application."
+            }
+        },
+        "keyVaultName": {
+            "type": "string",
+            "metadata": {
+                "description": "Specifies the name of the key vault."
+            }
+        },
+        "enabledForDeployment": {
+            "type": "bool",
+            "metadata": {
+                "description": "Determines if the key vault is usable for deployment keys and secrets."
+            }
+        },
+        "enabledForDiskEncryption": {
+            "type": "bool",
+            "metadata": {
+                "description": "Determines if the key vault is usable for disc encription keys and secrets."
+            }
+        },
+        "enabledForTemplateDeployment": {
+            "type": "bool",
+            "metadata": {
+                "description": "Determines if the key vault is usable for deplate deployments keys and secrets."
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Specifies the Azure location where the key vault should be created."
+            }
+        },
+        "tenantId": {
+            "type": "string",
+            "defaultValue": "[subscription().tenantId]",
+            "metadata": {
+                "description": "Specifies the Azure Active Directory tenant ID that should be used for authenticating requests to the key vault. Get it by using Get-AzSubscription cmdlet."
+            }
+        },
+        "skuName": {
+            "type": "string",
+            "defaultValue": "Standard",
+            "allowedValues": [
+                "Standard",
+                "Premium"
+            ],
+            "metadata": {
+                "description": "Specifies whether the key vault is a standard vault or a premium vault."
+            }
+        },
+        "branchName": {
+            "type": "string",
+            "defaultValue": "master",
+            "metadata": {
+                "description": "The name of the branch that the application artefact originated from."
+            }
+        },
+        "releaseDate": {
+            "type": "string",
+            "defaultValue": "[utcNow()]",
+            "metadata": {
+                "description": "The timestamp at which the release happened."
+            }
+        },
+        "releaseName": {
+            "defaultValue": "latest",
+            "type": "string",
+            "metadata": {
+                "description": "The name of the release that has lastly modified the resource."
+            }
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.KeyVault/vaults",
+            "name": "[concat(parameters('keyVaultName'))]",
+            "apiVersion": "2018-02-14",
+            "location": "[parameters('location')]",
+            "tags": {
+                "Application": "[parameters('applicationName')]",
+                "Description": "[parameters('description')]",
+                "Release": "[parameters('releaseName')]",
+                "BranchName": "[parameters('branchName')]",
+                "ReleaseName": "[parameters('releaseDate')]"
+            },
+            "properties": {
+                "accessPolicies": [
+                    {
+                      "objectId": "",
+                      "permissions": {
+                        "certificates": [ "all" ],
+                        "keys": [ "all" ],
+                        "secrets": [ "all" ],
+                        "storage": [ "all" ]
+                      },
+                      "tenantId": "[subscription().tenantId]"
+                    }
+                  ],
+                "enabledForDeployment": "[parameters('enabledForDeployment')]",
+                "enabledForDiskEncryption": "[parameters('enabledForDiskEncryption')]",
+                "enabledForTemplateDeployment": "[parameters('enabledForTemplateDeployment')]",
+                "tenantId": "[parameters('tenantId')]",
+                "sku": {
+                    "name": "[parameters('skuName')]",
+                    "family": "A"
+                },
+                "networkAcls": {
+                    "defaultAction": "Allow",
+                    "bypass": "AzureServices"
+                }
+            }
+        }
+    ]
+}
