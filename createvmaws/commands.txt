@@ -1,0 +1,8 @@
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+choco install awscli -y
+choco upgrade all -y
+aws --version
+aws configure
+aws ec2 describe-images --owners self amazon
+clear
+aws ec2 run-instances --image-id ami-d06ef2c7 --count 1 --instance-type t2.micro --key-name mylovelypair --security-group-ids sg-0643e9fb86dcf0988 --subnet-id subnet-037d4b5f
