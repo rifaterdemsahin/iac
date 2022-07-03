@@ -1,0 +1,10 @@
+FROM mcr.microsoft.com/windows/servercore:ltsc2019
+WORKDIR /azp
+COPY start.ps1 .
+RUN powershell Get-Module -ListAvailable -Name PackageManagement
+RUN powershell Install-PackageProvider -Name NuGet -Force
+
+RUN powershell Install-Module -Name xxxx -Verbose -Scope CurrentUser -Force
+
+
+CMD powershell .\start.ps1
