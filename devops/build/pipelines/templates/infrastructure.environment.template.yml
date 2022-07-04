@@ -81,46 +81,46 @@ stages:
         #         scriptLocation: inlineScript
         #         inlineScript: |
         #           az deployment group create --resource-group $(azure.resourceGroup) --template-file '$(System.DefaultWorkingDirectory)/build/armtemplates/databricks_v1/databricks.bicep' --parameters '{ \"workspaceName\": { \"value\": \"testerdatabricks\" } }'
-        - job: alerts
-          displayName: alerts
-          continueOnError: true
-          # variables:
-          # - group: databricks    
-          steps:
-#            - task: AzureCLI@2
-#              inputs:
-#                azureSubscription: ${{ parameters.azureResourceManagerConnection }}
-#                scriptType: pscore
-#                scriptLocation: inlineScript
-#                inlineScript: |
-#                  az deployment group create --resource-group $(azure.resourceGroup) --template-file '$(System.DefaultWorkingDirectory)/build/armtemplates/containerinstance_v1/main.bicep'
-            - task: AzureResourceGroupDeployment@2
-              displayName: 'alert budget stage 100'
-              continueOnError: ${{ parameters.firstTimeRun }}
-              inputs:
-                azureSubscription: ${{ parameters.azureResourceManagerConnection }}
-                resourceGroupName: $(azure.resourceGroup)
-                location: '$(azure.location)'
-                csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/alerts_v1/alerts.azrm.json'
-                overrideParameters: '-budgetName "budgetpoint1" -amount "100"'
-            - task: AzureResourceGroupDeployment@2
-              displayName: 'alert budget stage 200'
-              continueOnError: ${{ parameters.firstTimeRun }}
-              inputs:
-                azureSubscription: ${{ parameters.azureResourceManagerConnection }}
-                resourceGroupName: $(azure.resourceGroup)
-                location: '$(azure.location)'
-                csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/alerts_v1/alerts.azrm.json'
-                overrideParameters: '-budgetName "budgetpoint1" -amount "200"'
-            - task: AzureResourceGroupDeployment@2
-              displayName: 'alert budget stage 300'
-              continueOnError: ${{ parameters.firstTimeRun }}
-              inputs:
-                azureSubscription: ${{ parameters.azureResourceManagerConnection }}
-                resourceGroupName: $(azure.resourceGroup)
-                location: '$(azure.location)'
-                csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/alerts_v1/alerts.azrm.json'
-                overrideParameters: '-budgetName "budgetpoint3" -amount "300"'
+#         - job: alerts
+#           displayName: alerts
+#           continueOnError: true
+#           # variables:
+#           # - group: databricks    
+#           steps:
+# #            - task: AzureCLI@2
+# #              inputs:
+# #                azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+# #                scriptType: pscore
+# #                scriptLocation: inlineScript
+# #                inlineScript: |
+# #                  az deployment group create --resource-group $(azure.resourceGroup) --template-file '$(System.DefaultWorkingDirectory)/build/armtemplates/containerinstance_v1/main.bicep'
+#             - task: AzureResourceGroupDeployment@2
+#               displayName: 'alert budget stage 100'
+#               continueOnError: ${{ parameters.firstTimeRun }}
+#               inputs:
+#                 azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+#                 resourceGroupName: $(azure.resourceGroup)
+#                 location: '$(azure.location)'
+#                 csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/alerts_v1/alerts.azrm.json'
+#                 overrideParameters: '-budgetName "budgetpoint1" -amount "100"'
+#             - task: AzureResourceGroupDeployment@2
+#               displayName: 'alert budget stage 200'
+#               continueOnError: ${{ parameters.firstTimeRun }}
+#               inputs:
+#                 azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+#                 resourceGroupName: $(azure.resourceGroup)
+#                 location: '$(azure.location)'
+#                 csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/alerts_v1/alerts.azrm.json'
+#                 overrideParameters: '-budgetName "budgetpoint1" -amount "200"'
+#             - task: AzureResourceGroupDeployment@2
+#               displayName: 'alert budget stage 300'
+#               continueOnError: ${{ parameters.firstTimeRun }}
+#               inputs:
+#                 azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+#                 resourceGroupName: $(azure.resourceGroup)
+#                 location: '$(azure.location)'
+#                 csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/alerts_v1/alerts.azrm.json'
+#                 overrideParameters: '-budgetName "budgetpoint3" -amount "300"'
         - job: TestContainerInstance
                   condition: and(succeeded(), eq(variables['MyBuildReason'], 'TestDeployment'))
                   displayName: TestContainerInstance
