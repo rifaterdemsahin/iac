@@ -1,0 +1,25 @@
+# Generic template 
+name: DevOpsInfraCreationPipeline
+trigger: none
+
+variables:
+  - name: System.Debug
+    value: true
+
+parameters:
+    - name: InitialCreation
+      displayName: Deploying for the first time
+      type: boolean
+      default: false
+    - name: firstTimeRun
+      type: boolean
+      default: true
+
+stages:
+  - template: templates/infrastructure.environment.crtest.template.yml
+    parameters:
+      environment: DevOpsDev
+      resourceGroupName: 'DevOpsDev'
+      version: $(Build.BuildNumber)
+      firstTimeRun: ${{ parameters.firstTimeRun }}
+      azureResourceManagerConnection: Pay-As-You-Go(15704bda-bb65-45ef-bd84-55b56bb32733)
