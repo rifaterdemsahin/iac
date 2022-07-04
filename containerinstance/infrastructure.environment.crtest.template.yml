@@ -1,0 +1,36 @@
+parameters:
+  - name: environment
+    values:
+      - DevOpsDev
+      - DevOpsTst
+      - DevOpsPrd
+  - name: firstTimeRun
+    type: boolean
+  - name: resourceGroupName
+  - name: version
+  - name: azureResourceManagerConnection  # Cannot be a variable (https://docs.microsoft.com/en-us/azure/devops/pipelines/library/service-endpoints?view=azure-devops&tabs=yaml#use-a-service-connection)
+stages:
+  - template: environment.template.yml
+    parameters:
+      environment: ${{ parameters.environment }}
+      version: ${{ parameters.version }}
+      setReleaseName: false
+      variables:
+        - template: ../variables/infrastructure.variables.yml@self
+        - template: ../variables/containerregistry.variables.yml@self
+      jobs:
+        - job: TestContainerInstance
+          condition: and(succeeded(), eq(variables['MyBuildReason'], 'TestDeployment'))
+          displayName: TestContainerInstance
+          continueOnError: true
+          steps:
+            - checkout: self
+            - task: AzureResourceGroupDeployment@2
+              displayName: 'ContainerInstance DevOps Runner'
+              continueOnError: ${{ parameters.firstTimeRun }}
+              inputs:
+                azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+                resourceGroupName: $(azure.resourceGroup)
+                location: '$(azure.location)'
+                csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/containerinstance_v1/containerinstance.template.json'
+                overrideParameters: '-imageRegistryPassword ltA75snCUDdjAtPvEz32A=wftSYN8mVc -containerGroups_devopsrunner_name pipelines-devops-docker'
