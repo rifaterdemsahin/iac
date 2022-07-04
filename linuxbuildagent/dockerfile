@@ -1,27 +1,38 @@
-#Build and push
-#https://docs.microsoft.com/en-us/azure/devops/pipelines/ecosystems/containers/acr-template?view=azure-devops
-#Service Connection
-#https://docs.microsoft.com/en-us/azure/container-registry/container-registry-authentication?tabs=azure-cli#admin-account
-#Granting permission here will permit the use of Service connection 'devopspexabo.azurecr.io' for all waiting and future runs of this pipeline.
-trigger: none
-   
-pool:
-  vmImage: 'ubuntu-latest'
-   
+FROM ubuntu:18.04
 
-variables:
-  imageName: 'pipelines-devops-docker'
-  DOCKER_BUILDKIT: 1
-  dockerRegistryServiceConnection: devopspexabo.azurecr.io
-    
-steps:
-  - checkout: self
-  - task: Docker@2
+# To make it easier for build and release pipelines to run apt-get,
+# configure apt to not require confirmation (assume the -y argument by default)
+ENV DEBIAN_FRONTEND=noninteractive
+RUN echo "APT::Get::Assume-Yes \"true\";" > /etc/apt/apt.conf.d/90assumeyes
 
-    displayName: Build and Push image
-    inputs:
-      repository: $(imageName)
-      command: buildAndPush
-      containerRegistry: $(dockerRegistryServiceConnection)
-      Dockerfile: $(System.DefaultWorkingDirectory)/build/pipelines/docker/dockerfile
-      tags: latest
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    jq \
+    git \
+    iputils-ping \
+    libcurl4 \
+    libicu60 \
+    libunwind8 \
+    netcat \
+    libssl1.0 \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN curl -LsS https://aka.ms/InstallAzureCLIDeb | bash \
+  && rm -rf /var/lib/apt/lists/*
+
+ARG TARGETARCH=amd64
+ARG AGENT_VERSION=2.185.1
+
+WORKDIR /azp
+RUN if [ "$TARGETARCH" = "amd64" ]; then \
+      AZP_AGENTPACKAGE_URL=https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/vsts-agent-linux-x64-${AGENT_VERSION}.tar.gz; \
+    else \
+      AZP_AGENTPACKAGE_URL=https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/vsts-agent-linux-${TARGETARCH}-${AGENT_VERSION}.tar.gz; \
+    fi; \
+    curl -LsS "$AZP_AGENTPACKAGE_URL" | tar -xz
+
+COPY ./start.sh .
+RUN chmod +x start.sh
+
+ENTRYPOINT [ "./start.sh" ]
