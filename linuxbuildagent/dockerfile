@@ -1,0 +1,27 @@
+#Build and push
+#https://docs.microsoft.com/en-us/azure/devops/pipelines/ecosystems/containers/acr-template?view=azure-devops
+#Service Connection
+#https://docs.microsoft.com/en-us/azure/container-registry/container-registry-authentication?tabs=azure-cli#admin-account
+#Granting permission here will permit the use of Service connection 'devopspexabo.azurecr.io' for all waiting and future runs of this pipeline.
+trigger: none
+   
+pool:
+  vmImage: 'ubuntu-latest'
+   
+
+variables:
+  imageName: 'pipelines-devops-docker'
+  DOCKER_BUILDKIT: 1
+  dockerRegistryServiceConnection: devopspexabo.azurecr.io
+    
+steps:
+  - checkout: self
+  - task: Docker@2
+
+    displayName: Build and Push image
+    inputs:
+      repository: $(imageName)
+      command: buildAndPush
+      containerRegistry: $(dockerRegistryServiceConnection)
+      Dockerfile: $(System.DefaultWorkingDirectory)/build/pipelines/docker/dockerfile
+      tags: latest
