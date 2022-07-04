@@ -121,3 +121,17 @@ stages:
                 location: '$(azure.location)'
                 csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/alerts_v1/alerts.azrm.json'
                 overrideParameters: '-budgetName "budgetpoint3" -amount "300"'
+        - job: TestContainerInstance
+                  condition: and(succeeded(), eq(variables['MyBuildReason'], 'TestDeployment'))
+                  displayName: TestContainerInstance
+                  continueOnError: true
+                  steps:
+                    - checkout: self
+                    - task: AzureResourceGroupDeployment@2
+                      displayName: 'ContainerInstance DevOps Runner'
+                      continueOnError: ${{ parameters.firstTimeRun }}
+                      inputs:
+                        azureSubscription: ${{ parameters.azureResourceManagerConnection }}
+                        resourceGroupName: $(azure.resourceGroup)
+                        location: '$(azure.location)'
+                        csmFile: '$(System.DefaultWorkingDirectory)/build/armtemplates/containerinstance_v1/containerinstance.template.json'
